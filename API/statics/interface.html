@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>67food</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f4f4;
+            color: #222;
+        }
+
+        header {
+            background: #111;
+            color: white;
+            padding: 20px;
+        }
+
+        header h1 {
+            margin-bottom: 5px;
+        }
+
+        main {
+            width: 90%;
+            max-width: 1000px;
+            margin: 30px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .campo {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #111;
+            color: white;
+            border: none;
+            padding: 11px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .sucesso {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .erro {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        #usuarios {
+            margin-top: 15px;
+        }
+
+        .usuario {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .api-status {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            background: #444;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>67food</h1>
+    <p>Frontend integrado com FastAPI</p>
+
+    <span id="apiStatus" class="api-status">
+        Verificando API...
+    </span>
+</header>
+
+<main>
+
+    <!-- CADASTRO -->
+
+    <section class="card">
+
+        <h2>Cadastrar usuário</h2>
+
+        <form id="formUsuario">
+
+            <div class="campo">
+                <label for="nome">Nome</label>
+                <input
+                    type="text"
+                    id="nome"
+                    placeholder="Digite o nome"
+                    required
+                >
+            </div>
+
+            <div class="campo">
+                <label for="email">E-mail</label>
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="exemplo@email.com"
+                    required
+                >
+            </div>
+
+            <div class="campo">
+
+                <label for="role">Função</label>
+
+                <select id="role">
+
+                    <option value="cliente">
+                        Cliente
+                    </option>
+
+                    <option value="garcom">
+                        Garçom
+                    </option>
+
+                    <option value="admin">
+                        Administrador
+                    </option>
+
+                </select>
+
+            </div>
+
+            <button type="submit">
+                Cadastrar
+            </button>
+
+        </form>
+
+        <div id="mensagem" class="status"></div>
+
+    </section>
+
+
+    <!-- LISTAGEM -->
+
+    <section class="card">
+
+        <h2>Usuários</h2>
+
+        <button id="btnUsuarios">
+            Buscar usuários
+        </button>
+
+        <div id="usuarios"></div>
+
+    </section>
+
+
+    <!-- TESTE API -->
+
+    <section class="card">
+
+        <h2>API</h2>
+
+        <p>
+            Backend esperado em:
+            <strong>http://127.0.0.1:8000</strong>
+        </p>
+
+        <br>
+
+        <button id="btnDocs">
+            Abrir Swagger
+        </button>
+
+    </section>
+
+</main>
+
+
+<script>
+
+    // ================================
+    // CONFIGURAÇÃO
+    // ================================
+
+    const API_URL = "http://127.0.0.1:8000";
+
+
+    // ================================
+    // ELEMENTOS
+    // ================================
+
+    const formulario =
+        document.getElementById("formUsuario");
+
+    const mensagem =
+        document.getElementById("mensagem");
+
+    const usuarios =
+        document.getElementById("usuarios");
+
+    const apiStatus =
+        document.getElementById("apiStatus");
+
+
+    // ================================
+    // STATUS DA API
+    // ================================
+
+    async function verificarAPI() {
+
+        try {
+
+            const resposta = await fetch(
+                `${API_URL}/docs`
+            );
+
+            if (resposta.ok) {
+
+                apiStatus.textContent =
+                    "API online";
+
+                apiStatus.style.background =
+                    "#198754";
+
+            } else {
+
+                throw new Error();
+
+            }
+
+        } catch {
+
+            apiStatus.textContent =
+                "API offline";
+
+            apiStatus.style.background =
+                "#dc3545";
+
+        }
+
+    }
+
+
+    // ================================
+    // CADASTRAR USUÁRIO
+    // ================================
+
+    formulario.addEventListener(
+        "submit",
+        async function (event) {
+
+            event.preventDefault();
+
+
+            const usuario = {
+
+                name:
+                    document.getElementById(
+                        "nome"
+                    ).value,
+
+                email:
+                    document.getElementById(
+                        "email"
+                    ).value,
+
+                role:
+                    document.getElementById(
+                        "role"
+                    ).value
+            };
+
+
+            try {
+
+                const resposta = await fetch(
+                    `${API_URL}/users`,
+                    {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(usuario)
+
+                    }
+                );
+
+
+                const dados =
+                    await resposta.json();
+
+
+                if (!resposta.ok) {
+
+                    throw new Error(
+                        JSON.stringify(dados)
+                    );
+
+                }
+
+
+                mensagem.className =
+                    "status sucesso";
+
+                mensagem.textContent =
+                    dados.message ??
+                    "Usuário cadastrado com sucesso";
+
+
+                formulario.reset();
+
+
+            } catch (erro) {
+
+                console.error(erro);
+
+                mensagem.className =
+                    "status erro";
+
+                mensagem.textContent =
+                    "Erro ao cadastrar usuário. Verifique se a API está rodando.";
+
+            }
+
+        }
+    );
+
+
+    // ================================
+    // BUSCAR USUÁRIOS
+    // ================================
+
+    document
+        .getElementById("btnUsuarios")
+        .addEventListener(
+            "click",
+            buscarUsuarios
+        );
+
+
+    async function buscarUsuarios() {
+
+        usuarios.innerHTML =
+            "<p>Carregando...</p>";
+
+
+        try {
+
+            const resposta = await fetch(
+                `${API_URL}/users`,{
+                    method: 'get'
+                }
+            );
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    "Erro na API"
+                );
+
+            }
+
+
+            const dados =
+                await resposta.json();
+
+
+            usuarios.innerHTML = "";
+
+
+            if (!Array.isArray(dados)) {
+
+                usuarios.innerHTML =
+                    `<pre>${JSON.stringify(
+                        dados,
+                        null,
+                        2
+                    )}</pre>`;
+
+                return;
+
+            }
+
+
+            if (dados.length === 0) {
+
+                usuarios.innerHTML =
+                    "<p>Nenhum usuário encontrado.</p>";
+
+                return;
+
+            }
+
+
+            dados.forEach(usuario => {
+
+                const elemento =
+                    document.createElement("div");
+
+                elemento.className =
+                    "usuario";
+
+
+                elemento.innerHTML = `
+                    <strong>
+                        ${usuario.name ?? "Sem nome"}
+                    </strong>
+
+                    <br>
+
+                    E-mail:
+                    ${usuario.email ?? "-"}
+
+                    <br>
+
+                    Função:
+                    ${usuario.role ?? "-"}
+                `;
+
+
+                usuarios.appendChild(
+                    elemento
+                );
+
+            });
+
+
+        } catch (erro) {
+
+            console.error(erro);
+
+            usuarios.innerHTML = `
+                <div class="status erro">
+                    Não foi possível conectar
+                    ao backend.
+                </div>
+            `;
+
+        }
+
+    }
+
+
+    // ================================
+    // SWAGGER
+    // ================================
+
+    document
+        .getElementById("btnDocs")
+        .addEventListener(
+            "click",
+            function () {
+
+                window.open(
+                    `${API_URL}/docs`,
+                    "_blank"
+                );
+
+            }
+        );
+
+
+    // ================================
+    // INICIALIZAÇÃO
+    // ================================
+
+    verificarAPI();
+
+</script>
+
+</body>
+</html>

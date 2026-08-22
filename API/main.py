@@ -1,84 +1,68 @@
-from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel
-from typing import List, Optional
-
 '''
 Patrick Prado - 22552018, Bruno Monteiro - 22305939, Samuel Correa Abreu - 22650765, Pedro Postay - 22308711
 '''
 
+
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
+from typing import List, Optional
+
+from models.user import User
+from models.address import Address
+from models.category import Category
+from models.coupon import Coupon
+from models.OptionGroup import OptionGroup
+from models.order import Order
+from models.payment import Payment
+from models.product import Product
+from models.review import Review
+from models.table import Table
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="67food")
 
 
-# ==========================================
-# MODELOS (Pydantic)
-# ==========================================
+users = []
 
-class User(BaseModel):
-    name: str
-    email: str
-    role: str  # cliente, garçom, admin
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5500", "http://localhost:5500"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class Address(BaseModel):
-    street: str
-    number: str
-    complement: Optional[str] = None
-    city: str
+# =======================
+# X. Teste
+# =======================
 
-class Category(BaseModel):
-    name: str
-    active: bool = True
+class TesteFront(BaseModel):
+    nome: str
+    localizacao: str
 
-class Product(BaseModel):
-    name: str
-    price: float
-    category_id: int
-    description: Optional[str] = None
 
-class OptionGroup(BaseModel):
-    name: str
-    min_options: int
-    max_options: int
-
-class Table(BaseModel):
-    number: int
-    capacity: int
-    status: str = "Livre"  # Livre, Ocupada, Reservada
-
-class Order(BaseModel):
-    user_id: int
-    items: List[dict]
-    total: float
-    status: str = "Pendente"  # Pendente, Em Preparo, A Caminho, Concluído
-
-class Payment(BaseModel):
-    order_id: int
-    method: str  # Pix, Cartão, Dinheiro
-    amount: float
-
-class Review(BaseModel):
-    order_id: int
-    rating: int  # 1 a 5
-    comment: Optional[str] = None
-
-class Coupon(BaseModel):
-    code: str
-    discount_percentage: float
-    active: bool = True
-
+@app.post("/teste-front")
+def teste_front(dados: TesteFront):
+    return {
+        "message": "Dados recebidos com sucesso",
+        "nome": dados.nome,
+        "localizacao": dados.localizacao
+    }
 
 # ==========================================
 # 1. BLOCO: USUÁRIOS E AUTENTICAÇÃO
 # ==========================================
 
 @app.post("/users", tags=["Usuários"])
-def create_user(user: User):
+def create_user(user: User) -> dict:
     """Cadastrar novo usuário"""
+    users.append(user)
     return {"message": "Usuário criado com sucesso", "data": user}
 
 @app.get("/users", tags=["Usuários"])
-def get_users(role: Optional[str] = None):
+def get_users(role: Optional[str] = None) -> list[User]:
     """Listar usuários (com filtro opcional por função)"""
-    return [{"id": 1, "name": "João Silva", "role": role or "cliente"}]
+    return users
 
 @app.get("/users/{user_id}", tags=["Usuários"])
 def get_user(user_id: int):
